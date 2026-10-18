@@ -1,0 +1,2017 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JOHAR - Apna Short Video App</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Tone.js for Real-Time Synthesized Audio Beats -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        joharRed: '#FF0000',
+                        joharBlue: '#001E80',
+                        joharDark: '#0A0A0C',
+                        joharCard: '#141419',
+                        joharBorder: '#26262E'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Poppins', 'sans-serif']
+                    },
+                    animation: {
+                        'spin-slow': 'spin 5s linear infinite',
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        body {
+            background-color: #0A0A0C;
+            color: #FFFFFF;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        /* Hide scrollbars while keeping functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Vertical Snap Scroll Container */
+        .video-feed-container {
+            scroll-snap-type: y mandatory;
+            overflow-y: scroll;
+            height: 100%;
+            scroll-behavior: smooth;
+        }
+        .video-slide {
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+        /* Floating Heart Animation on Double Tap */
+        @keyframes floatHeart {
+            0% {
+                transform: translate(-50%, -50%) scale(0) rotate(-15deg);
+                opacity: 1;
+            }
+            30% {
+                transform: translate(-50%, -60%) scale(1.3) rotate(10deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -180%) scale(1.6) rotate(-10deg);
+                opacity: 0;
+            }
+        }
+        .floating-heart {
+            position: absolute;
+            pointer-events: none;
+            z-index: 40;
+            color: #FF0000;
+            filter: drop-shadow(0 4px 12px rgba(255, 0, 0, 0.65));
+            animation: floatHeart 0.95s ease-out forwards;
+        }
+        /* Music notes floating from vinyl disc */
+        @keyframes musicNote {
+            0% {
+                transform: translate(0, 0) scale(0.5) rotate(0deg);
+                opacity: 0;
+            }
+            40% {
+                opacity: 0.9;
+            }
+            100% {
+                transform: translate(-35px, -55px) scale(1.1) rotate(-25deg);
+                opacity: 0;
+            }
+        }
+        .music-note-anim {
+            animation: musicNote 2.4s infinite linear;
+        }
+        /* Custom TikTok/JOHAR dual-tone button shadow */
+        .johar-upload-btn {
+            background: linear-gradient(135deg, #FF0000 0%, #001E80 100%);
+            box-shadow: -3px 0 0 #FF0000, 3px 0 0 #001E80, 0 4px 15px rgba(255, 0, 0, 0.4);
+        }
+        .johar-logo-glow {
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.45), inset 0 0 8px rgba(0, 30, 128, 0.5);
+        }
+        /* Marquee text for music ticker */
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 10s linear infinite;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col md:flex-row bg-joharDark">
+
+    <!-- REUSABLE SVG DEFINITIONS (Exact Uploaded Logo in Red #FF0000 & Royal Blue #001E80) -->
+    <svg width="0" height="0" class="hidden">
+        <defs>
+            <!-- Exact recreation of the uploaded 3 diagonal wavy flames in a diamond silhouette -->
+            <symbol id="johar-logo-symbol" viewBox="0 0 200 200">
+                <rect width="200" height="200" rx="36" fill="#FF0000"/>
+                <!-- Subtle inner highlight -->
+                <rect x="3" y="3" width="194" height="194" rx="33" fill="none" stroke="#ffffff" stroke-opacity="0.15" stroke-width="2"/>
+                <g transform="translate(100, 100) rotate(-42) translate(-100, -100)">
+                    <!-- Left Wave Flame -->
+                    <path d="M 65 40 C 48 65, 82 95, 65 130 C 57 142, 48 130, 50 112 C 42 82, 74 58, 65 40 Z" fill="#001E80"/>
+                    <!-- Center Wave Flame (Longest) -->
+                    <path d="M 100 18 C 78 55, 122 105, 100 182 C 88 158, 112 115, 92 78 C 82 55, 106 32, 100 18 Z" fill="#001E80"/>
+                    <!-- Right Wave Flame -->
+                    <path d="M 135 70 C 118 105, 152 135, 135 160 C 126 142, 158 118, 150 88 C 152 70, 143 58, 135 70 Z" fill="#001E80"/>
+                </g>
+                <!-- Crisp Vector Overlay matching the exact 3 parallel diagonal S-flames from the image -->
+                <rect width="200" height="200" rx="36" fill="#FF0000"/>
+                <g fill="#001E80">
+                    <!-- Bottom-Left Stripe -->
+                    <path d="M 76 74 C 71 84, 73 94, 82 103 L 106 127 C 116 137, 117 152, 101 174 C 105 162, 102 152, 92 142 L 66 116 C 54 104, 56 87, 76 74 Z"/>
+                    <!-- Center Stripe -->
+                    <path d="M 96 49 C 91 59, 93 69, 102 78 L 128 104 C 138 114, 139 129, 123 151 C 127 139, 124 129, 114 119 L 86 91 C 74 79, 76 62, 96 49 Z"/>
+                    <!-- Top-Right Stripe -->
+                    <path d="M 116 24 C 111 34, 113 44, 122 53 L 146 77 C 156 87, 157 102, 141 124 C 145 112, 142 102, 132 92 L 106 66 C 94 54, 96 37, 116 24 Z"/>
+                </g>
+            </symbol>
+        </defs>
+    </svg>
+
+    <!-- DESKTOP LEFT SIDEBAR -->
+    <aside class="hidden md:flex flex-col w-64 lg:w-72 bg-joharCard border-r border-joharBorder h-full z-30 select-none shrink-0 justify-between p-4">
+        <div>
+            <!-- Brand Header -->
+            <div class="flex items-center gap-3.5 px-2 py-3 mb-4 cursor-pointer group" onclick="switchView('feed')">
+                <svg class="w-12 h-12 rounded-2xl johar-logo-glow transition-transform duration-300 group-hover:scale-105 shrink-0">
+                    <use href="#johar-logo-symbol"></use>
+                </svg>
+                <div>
+                    <div class="flex items-center gap-1.5">
+                        <h1 class="font-display font-black text-2xl tracking-wider text-white">JOHAR</h1>
+                        <span class="bg-joharRed text-[10px] font-extrabold px-1.5 py-0.5 rounded text-white">IN</span>
+                    </div>
+                    <p class="text-[11px] text-gray-400 font-medium leading-tight">Jharkhand & Desh Ka App</p>
+                </div>
+            </div>
+
+            <!-- Search Input Desktop -->
+            <div class="relative mb-5">
+                <input type="text" id="desktopSearchInput" oninput="handleSearch(this.value)" placeholder="Search creators, #Johar..." 
+                    class="w-full bg-joharDark border border-joharBorder focus:border-joharRed rounded-xl py-2.5 pl-9 pr-4 text-sm text-white placeholder-gray-500 focus:outline-none transition">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-gray-400 text-xs"></i>
+            </div>
+
+            <!-- Main Navigation Links -->
+            <nav class="space-y-1.5">
+                <button onclick="switchView('feed')" id="nav-desktop-feed" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl font-semibold text-sm transition bg-joharRed/15 text-joharRed border border-joharRed/30">
+                    <i class="fa-solid fa-house text-lg w-5"></i>
+                    <span>For You Feed</span>
+                </button>
+                <button onclick="switchView('discover')" id="nav-desktop-discover" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl font-semibold text-sm text-gray-300 hover:bg-white/5 transition">
+                    <i class="fa-solid fa-compass text-lg w-5"></i>
+                    <span>Discover & Local</span>
+                    <span class="ml-auto bg-joharBlue text-[10px] px-2 py-0.5 rounded-full text-blue-200 font-bold">Hot</span>
+                </button>
+                <button onclick="openLiveModal()" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl font-semibold text-sm text-gray-200 hover:bg-joharRed/15 border border-transparent hover:border-joharRed/30 transition">
+                    <i class="fa-solid fa-tower-broadcast text-lg w-5 text-joharRed animate-pulse"></i>
+                    <span>JOHAR LIVE</span>
+                    <span class="ml-auto bg-joharRed text-[9px] px-1.5 py-0.5 rounded text-white font-black uppercase tracking-wider">LIVE</span>
+                </button>
+                <button onclick="openUploadModal()" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl font-semibold text-sm text-white johar-upload-btn hover:opacity-95 transition my-2">
+                    <i class="fa-solid fa-plus-circle text-lg w-5"></i>
+                    <span>Create / Upload</span>
+                </button>
+                <button onclick="switchView('inbox')" id="nav-desktop-inbox" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl font-semibold text-sm text-gray-300 hover:bg-white/5 transition">
+                    <i class="fa-solid fa-bolt text-lg w-5"></i>
+                    <span>Notifications</span>
+                    <span id="inbox-badge-desktop" class="ml-auto bg-joharRed text-[10px] px-1.5 py-0.5 rounded-full text-white font-bold">4</span>
+                </button>
+                <button onclick="switchView('profile')" id="nav-desktop-profile" class="w-full flex items-center gap-4 px-4 py-3 rounded-xl font-semibold text-sm text-gray-300 hover:bg-white/5 transition">
+                    <i class="fa-solid fa-user text-lg w-5"></i>
+                    <span>My Profile</span>
+                </button>
+            </nav>
+
+            <!-- Category Quick Filters -->
+            <div class="mt-6 pt-5 border-t border-joharBorder">
+                <p class="px-2 text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Trending Categories</p>
+                <div class="flex flex-wrap gap-1.5 px-1" id="desktopCategoryPills">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Suggested Creators Footer -->
+        <div class="border-t border-joharBorder pt-4">
+            <p class="px-2 text-xs font-bold uppercase tracking-wider text-gray-400 mb-2.5">Top Regional Creators</p>
+            <div class="space-y-2.5 text-xs">
+                <div class="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-white/5 cursor-pointer" onclick="openLiveModal()">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-joharRed to-joharBlue flex items-center justify-center font-bold text-white ring-2 ring-joharRed">G</div>
+                        <div>
+                            <p class="font-bold text-white leading-none flex items-center gap-1">the_godda_official <i class="fa-solid fa-circle-check text-blue-400 text-[10px]"></i></p>
+                            <p class="text-[10px] text-gray-400">Tap to watch LIVE</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] bg-joharRed text-white px-1.5 py-0.5 rounded font-bold animate-pulse">LIVE</span>
+                </div>
+                <div class="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-white/5 cursor-pointer" onclick="filterByCreator('@santhali_beats')">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center font-bold text-white">S</div>
+                        <div>
+                            <p class="font-bold text-white leading-none">santhali_beats</p>
+                            <p class="text-[10px] text-gray-400">Folk & DJ Music</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] text-gray-400">142K</span>
+                </div>
+            </div>
+            <p class="text-[10px] text-gray-500 mt-4 px-2">© 2026 JOHAR App • Made with ❤️ in India</p>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 h-full relative overflow-hidden flex flex-col items-center justify-center bg-joharDark">
+
+        <!-- TOP FLOATING BAR (FEED TABS + AUDIO MUTE BUTTON + MOBILE BRANDING) -->
+        <header id="feedTopHeader" class="absolute top-0 left-0 right-0 z-20 flex flex-col pointer-events-none">
+            <div class="flex items-center justify-between px-4 pt-3 pb-2 bg-gradient-to-b from-black/80 via-black/40 to-transparent pointer-events-auto">
+                <!-- Mobile Logo -->
+                <div class="flex items-center gap-2 cursor-pointer" onclick="resetFeedFilter()">
+                    <svg class="w-9 h-9 rounded-xl johar-logo-glow shrink-0">
+                        <use href="#johar-logo-symbol"></use>
+                    </svg>
+                    <div class="md:hidden">
+                        <span class="font-display font-black text-lg tracking-wider text-white block leading-none">JOHAR</span>
+                        <span class="text-[9px] text-red-400 font-semibold tracking-widest uppercase block">Apna App</span>
+                    </div>
+                </div>
+
+                <!-- Feed Mode Tabs (For You | Following | Jharkhand) -->
+                <div class="flex items-center gap-4 md:gap-6 bg-black/40 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
+                    <button onclick="setFeedTab('foryou')" id="tab-foryou" class="text-sm font-extrabold text-white relative py-0.5 transition">
+                        For You
+                        <span id="tab-ind-foryou" class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-1 bg-joharRed rounded-full"></span>
+                    </button>
+                    <span class="text-white/20 text-xs">|</span>
+                    <button onclick="setFeedTab('following')" id="tab-following" class="text-sm font-semibold text-gray-400 hover:text-white relative py-0.5 transition">
+                        Following
+                        <span id="tab-ind-following" class="hidden absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-1 bg-joharRed rounded-full"></span>
+                    </button>
+                    <span class="text-white/20 text-xs">|</span>
+                    <button onclick="setFeedTab('jharkhand')" id="tab-jharkhand" class="text-sm font-semibold text-gray-400 hover:text-white relative py-0.5 transition flex items-center gap-1">
+                        <span>Jharkhand</span>
+                <!-- Right Controls: Sound Toggle, Filter, LIVE & Mobile Search -->
+                <div class="flex items-center gap-1.5">
+                    <button onclick="openLiveModal()" class="flex items-center gap-1 bg-joharRed/90 hover:bg-joharRed backdrop-blur-md border border-white/20 px-2.5 py-1.5 rounded-full text-[11px] font-black text-white shadow-lg shadow-red-600/30 transition">
+                        <i class="fa-solid fa-tower-broadcast animate-pulse"></i>
+                        <span>LIVE</span>
+                    </button>
+                    <button onclick="cycleVideoFilter()" id="filterToggleBtn" title="Change Video Filter" class="flex items-center gap-1 bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/15 px-2.5 py-1.5 rounded-full text-xs font-bold text-white transition">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                        <span id="activeFilterLabel" class="hidden sm:inline text-[11px]">Normal</span>
+                    </button>
+                    <button onclick="toggleAudioEngine()" id="soundToggleBtn" class="flex items-center gap-1.5 bg-black/50 hover:bg-black/80 backdrop-blur-md border border-white/15 px-2.5 py-1.5 rounded-full text-xs font-bold text-white transition">
+                        <i id="soundToggleIcon" class="fa-solid fa-volume-xmark text-joharRed"></i>
+                        <span id="soundToggleText" class="hidden lg:inline">Tap Sound</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Horizontal Category Hashtag Filter Bar -->
+            <div id="mobileCategoryBar" class="flex items-center gap-2 px-4 py-1.5 overflow-x-auto no-scrollbar pointer-events-auto">
+                <!-- Populated dynamically via JS -->
+            </div>
+        </header>
+
+        <!-- VIEW 1: VERTICAL VIDEO FEED -->
+        <section id="view-feed" class="w-full h-full flex justify-center items-center relative">
+            <!-- Phone-proportioned container on desktop, full screen on mobile -->
+            <div class="w-full md:max-w-[430px] h-full bg-black relative shadow-2xl md:border-x md:border-joharBorder overflow-hidden">
+                <div id="videoFeedContainer" class="video-feed-container no-scrollbar pb-14 md:pb-0">
+                    <!-- Video Slides Injected by JS -->
+                </div>
+        <!-- VIEW 3: INBOX / NOTIFICATIONS & DIRECT MESSAGES PAGE -->
+        <section id="view-inbox" class="hidden w-full h-full overflow-y-auto no-scrollbar bg-joharDark p-4 md:p-8 pb-24">
+            <div class="max-w-xl mx-auto">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-2xl font-display font-black text-white">Inbox & Johar Chat</h2>
+                        <p class="text-xs text-gray-400">Connect with creators and check your activity</p>
+                    </div>
+                    <button onclick="markNotificationsRead()" class="text-xs bg-joharCard hover:bg-white/10 border border-joharBorder px-3 py-1.5 rounded-lg text-gray-300 transition">
+                        <i class="fa-solid fa-check-double mr-1 text-joharRed"></i> Read All
+                    </button>
+                </div>
+
+                <!-- Inbox Sub-Tabs: Activity vs Direct Messages -->
+                <div class="flex bg-joharCard p-1 rounded-xl border border-joharBorder mb-5">
+                    <button onclick="switchInboxSubTab('activity')" id="inbox-tab-activity" class="flex-1 py-2 rounded-lg text-xs font-bold bg-joharRed text-white transition">
+                        <i class="fa-solid fa-bolt mr-1"></i> Activity Alerts
+                    </button>
+                    <button onclick="switchInboxSubTab('messages')" id="inbox-tab-messages" class="flex-1 py-2 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-paper-plane"></i> Direct Messages
+                        <span class="bg-joharBlue text-blue-200 text-[10px] px-1.5 py-0.2 rounded-full">2</span>
+                    </button>
+                </div>
+
+                <!-- Activity Notifications List -->
+                <div id="notificationList" class="space-y-3">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Direct Messages (Johar Chat) UI -->
+                <div id="directMessagesPanel" class="hidden bg-joharCard border border-joharBorder rounded-2xl overflow-hidden flex flex-col h-[62vh]">
+                    <!-- Chat Creator Selector Header -->
+                    <div class="flex items-center justify-between px-4 py-3 bg-joharDark border-b border-joharBorder">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-joharRed to-joharBlue flex items-center justify-center font-bold text-sm text-white">G</div>
+                            <div>
+                                <p id="activeChatUser" class="text-xs font-bold text-white flex items-center gap-1">@the_godda_official <i class="fa-solid fa-circle-check text-blue-400 text-[10px]"></i></p>
+                                <p class="text-[10px] text-green-400 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"></span> Online now</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <button onclick="selectChatPartner('@the_godda_official')" class="text-[10px] bg-white/10 hover:bg-joharRed px-2.5 py-1 rounded-lg text-white font-semibold transition">Godda News</button>
+                            <button onclick="selectChatPartner('@santhali_beats')" class="text-[10px] bg-white/10 hover:bg-joharRed px-2.5 py-1 rounded-lg text-white font-semibold transition">Santhali Beats</button>
+                        </div>
+                    </div>
+
+                    <!-- Chat Messages Scroll Container -->
+                    <div id="chatMessagesContainer" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Chat Input Box -->
+                    <form onsubmit="sendDirectMessage(event)" class="p-3 bg-joharDark border-t border-joharBorder flex items-center gap-2">
+                        <input type="text" id="directMessageInput" required placeholder="Send a Johar message..." 
+                            class="flex-1 bg-joharCard border border-joharBorder focus:border-joharRed rounded-full px-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none">
+                        <button type="submit" class="w-9 h-9 rounded-full bg-joharRed hover:bg-red-600 text-white flex items-center justify-center shrink-0 transition">
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: INBOX / NOTIFICATIONS PAGE -->
+        <section id="view-inbox" class="hidden w-full h-full overflow-y-auto no-scrollbar bg-joharDark p-4 md:p-8 pb-24">
+            <div class="max-w-xl mx-auto">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-display font-black text-white">Activity & Inbox</h2>
+                        <p class="text-xs text-gray-400">Real-time updates from the JOHAR community</p>
+                    </div>
+                    <button onclick="markNotificationsRead()" class="text-xs bg-joharCard hover:bg-white/10 border border-joharBorder px-3 py-1.5 rounded-lg text-gray-300 transition">
+                        <i class="fa-solid fa-check-double mr-1 text-joharRed"></i> Mark all read
+                    </button>
+                </div>
+
+                <div id="notificationList" class="space-y-3">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 4: USER PROFILE PAGE -->
+        <section id="view-profile" class="hidden w-full h-full overflow-y-auto no-scrollbar bg-joharDark p-4 md:p-8 pb-24">
+            <div class="max-w-2xl mx-auto">
+                <!-- Profile Header Card -->
+                <div class="bg-joharCard border border-joharBorder rounded-2xl p-6 text-center relative overflow-hidden mb-6">
+                    <div class="absolute top-0 left-0 right-0 h-20 bg-gradient-to-r from-joharRed/80 via-joharBlue to-joharRed/80 opacity-60"></div>
+                    <div class="relative z-10 flex flex-col items-center">
+                        <div class="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-joharRed to-joharBlue shadow-xl mb-3">
+                            <svg class="w-full h-full rounded-full">
+                                <use href="#johar-logo-symbol"></use>
+                            </svg>
+                        </div>
+                        <h2 class="text-xl font-display font-black text-white flex items-center gap-1.5">
+                            @johar_creator_official
+                            <i class="fa-solid fa-circle-check text-blue-400 text-sm" title="Verified JOHAR Creator"></i>
+                        </h2>
+                        <p class="text-xs text-gray-400 mt-1 max-w-md">Jharkhand & Desh Ka Apna Creator 🇮🇳 | Local Culture, Music & Ground Reports | Johar Sabhi Ko 🙏</p>
+
+                        <!-- Follower / Following / Likes Counters -->
+                        <div class="flex items-center justify-center gap-8 my-5 py-3 px-6 bg-joharDark/80 rounded-xl border border-joharBorder">
+                            <div>
+                                <p id="profileFollowingCount" class="text-lg font-black text-white">18</p>
+                                <p class="text-[11px] text-gray-400">Following</p>
+                            </div>
+                            <div class="h-6 w-px bg-joharBorder"></div>
+                            <div>
+                                <p id="profileFollowersCount" class="text-lg font-black text-white">48.5K</p>
+                                <p class="text-[11px] text-gray-400">Followers</p>
+                            </div>
+                            <div class="h-6 w-px bg-joharBorder"></div>
+                            <div>
+                                <p id="profileLikesCount" class="text-lg font-black text-joharRed">312.4K</p>
+                                <p class="text-[11px] text-gray-400">Likes</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <button onclick="openUploadModal()" class="johar-upload-btn text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center gap-2">
+                                <i class="fa-solid fa-plus"></i> Upload New Video
+                            </button>
+                            <button onclick="copyProfileLink()" class="bg-joharDark hover:bg-white/10 border border-joharBorder text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-share-nodes"></i> Share Profile
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Tabs: Uploaded | Liked | Saved -->
+                <div class="flex border-b border-joharBorder mb-4">
+                    <button onclick="switchProfileTab('uploaded')" id="prof-tab-uploaded" class="flex-1 py-2.5 text-xs font-bold text-white border-b-2 border-joharRed flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-table-cells"></i> Videos
+                    </button>
+                    <button onclick="switchProfileTab('liked')" id="prof-tab-liked" class="flex-1 py-2.5 text-xs font-bold text-gray-400 hover:text-white border-b-2 border-transparent flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-heart"></i> Liked
+                    </button>
+                    <button onclick="switchProfileTab('saved')" id="prof-tab-saved" class="flex-1 py-2.5 text-xs font-bold text-gray-400 hover:text-white border-b-2 border-transparent flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-bookmark"></i> Bookmarked
+                    </button>
+                </div>
+
+                <!-- Profile Videos Grid -->
+                <div id="profileVideoGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-black/95 backdrop-blur-lg border-t border-white/10 z-30 flex items-center justify-around px-2">
+        <button onclick="switchView('feed')" id="nav-mobile-feed" class="flex flex-col items-center justify-center text-white py-1 px-3">
+            <i class="fa-solid fa-house text-lg"></i>
+            <span class="text-[10px] font-bold mt-0.5">Home</span>
+        </button>
+        <button onclick="switchView('discover')" id="nav-mobile-discover" class="flex flex-col items-center justify-center text-gray-400 py-1 px-3">
+            <i class="fa-solid fa-compass text-lg"></i>
+            <span class="text-[10px] font-medium mt-0.5">Discover</span>
+        </button>
+        <!-- Custom Red & Royal Blue Plus Button -->
+        <button onclick="openUploadModal()" class="w-12 h-8 rounded-xl johar-upload-btn flex items-center justify-center text-white transform active:scale-95 transition">
+            <i class="fa-solid fa-plus text-base font-black"></i>
+        </button>
+        <button onclick="switchView('inbox')" id="nav-mobile-inbox" class="flex flex-col items-center justify-center text-gray-400 py-1 px-3 relative">
+            <i class="fa-solid fa-bolt text-lg"></i>
+            <span class="text-[10px] font-medium mt-0.5">Inbox</span>
+            <span id="inbox-badge-mobile" class="absolute top-0.5 right-2.5 w-2 h-2 bg-joharRed rounded-full"></span>
+        </button>
+        <button onclick="switchView('profile')" id="nav-mobile-profile" class="flex flex-col items-center justify-center text-gray-400 py-1 px-3">
+            <i class="fa-solid fa-user text-lg"></i>
+            <span class="text-[10px] font-medium mt-0.5">Profile</span>
+        </button>
+    </nav>
+
+    <!-- SLIDE-UP COMMENTS DRAWER -->
+    <div id="commentsDrawerModal" class="fixed inset-0 z-50 hidden flex-col justify-end bg-black/60 backdrop-blur-xs">
+        <div class="w-full max-w-[430px] mx-auto bg-joharCard border-t border-x border-joharBorder rounded-t-3xl h-[65vh] flex flex-col overflow-hidden shadow-2xl animate-slide-up">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-joharBorder">
+                <span class="text-xs font-extrabold tracking-wide text-white"><span id="drawerCommentCount">0</span> Comments</span>
+                <button onclick="closeCommentsDrawer()" class="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-300">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+            <!-- Comments List -->
+            <div id="commentsListContainer" class="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
+                <!-- Populated by JS -->
+            </div>
+            <!-- Add Comment Input -->
+            <form onsubmit="submitComment(event)" class="p-3 bg-joharDark border-t border-joharBorder flex items-center gap-2">
+                <input type="text" id="newCommentInput" required placeholder="Add a respectful Johar comment..." 
+                    class="flex-1 bg-joharCard border border-joharBorder focus:border-joharRed rounded-full px-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none">
+                <button type="submit" class="w-9 h-9 rounded-full bg-joharRed hover:bg-red-600 text-white flex items-center justify-center shrink-0 transition">
+                    <i class="fa-solid fa-paper-plane text-xs"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- UPLOAD / CREATE SHORT VIDEO STUDIO MODAL -->
+    <div id="uploadModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div class="w-full max-w-md bg-joharCard border border-joharBorder rounded-3xl overflow-hidden shadow-2xl">
+            <div class="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-joharRed/20 to-joharBlue/30 border-b border-joharBorder">
+                <div class="flex items-center gap-2.5">
+                    <svg class="w-7 h-7 rounded-lg">
+                        <use href="#johar-logo-symbol"></use>
+                    </svg>
+                    <h3 class="font-display font-bold text-base text-white">Create JOHAR Short</h3>
+                </div>
+                <button onclick="closeUploadModal()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-300">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form onsubmit="handlePublishVideo(event)" class="p-5 space-y-4">
+                <!-- Optional Local Video File Picker -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-300 mb-1.5">1. Choose Video File (or use Instant Visual Studio below)</label>
+                    <label class="flex flex-col items-center justify-center border-2 border-dashed border-joharBorder hover:border-joharRed rounded-2xl p-4 cursor-pointer bg-joharDark/50 transition">
+                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-joharRed mb-1"></i>
+                        <span id="uploadFileName" class="text-xs text-gray-300 font-medium">Tap to select MP4/WebM from device (Optional)</span>
+                        <input type="file" id="videoFileInput" accept="video/*" class="hidden" onchange="handleFileSelection(this)">
+                    </label>
+                </div>
+
+                <!-- Visual Theme Picker (Used if no file uploaded or as overlay) -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-300 mb-1.5">2. Visual Theme & Headline Overlay</label>
+                    <div class="grid grid-cols-3 gap-2 mb-2">
+                        <button type="button" onclick="selectStudioTheme('news')" id="theme-btn-news" class="py-2 px-2 rounded-xl text-xs font-bold border border-joharRed bg-joharRed/20 text-white">
+                            📰 Breaking News
+                        </button>
+                        <button type="button" onclick="selectStudioTheme('folk')" id="theme-btn-folk" class="py-2 px-2 rounded-xl text-xs font-bold border border-joharBorder bg-joharDark text-gray-400">
+                            🥁 Folk & Beats
+                        </button>
+                        <button type="button" onclick="selectStudioTheme('nature')" id="theme-btn-nature" class="py-2 px-2 rounded-xl text-xs font-bold border border-joharBorder bg-joharDark text-gray-400">
+                            🌿 Jharkhand Vibe
+                        </button>
+                    </div>
+                    <input type="text" id="videoHeadlineInput" required placeholder="Big Screen Title (e.g., Godda Me Naya Highway Taiyar!)" 
+                        class="w-full bg-joharDark border border-joharBorder focus:border-joharRed rounded-xl px-3.5 py-2 text-xs text-white placeholder-gray-500 focus:outline-none">
+                </div>
+
+                <!-- Caption & Hashtags -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-300 mb-1.5">3. Caption & Hashtags</label>
+                    <textarea id="videoCaptionInput" rows="2" required placeholder="Write caption... #Johar #Jharkhand #Godda #Trending" 
+                        class="w-full bg-joharDark border border-joharBorder focus:border-joharRed rounded-xl p-3 text-xs text-white placeholder-gray-500 focus:outline-none"></textarea>
+                </div>
+
+                <!-- Background Audio Track -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-300 mb-1.5">4. Background Music Beat</label>
+                    <select id="videoMusicSelect" class="w-full bg-joharDark border border-joharBorder rounded-xl px-3 py-2 text-xs text-white focus:outline-none">
+                        <option value="mandar">🥁 Traditional Mandar & Nagpuri Drop (120 BPM)</option>
+                        <option value="news">🚨 Breaking News Broadcast Synth (135 BPM)</option>
+                        <option value="flute">🪈 Saranda Forest Bansuri Chill (98 BPM)</option>
+                        <option value="desa">🔥 Desi Hip-Hop Bass Beat (128 BPM)</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full py-3 rounded-xl font-display font-bold text-sm text-white johar-upload-btn transition transform active:scale-98 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rocket"></i> Post to JOHAR Feed Now
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JOHAR LIVE STREAMING ROOM MODAL -->
+    <div id="liveStreamModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 backdrop-blur-md">
+        <div class="w-full max-w-[430px] h-full md:h-[90vh] md:rounded-3xl bg-joharDark border border-joharBorder relative overflow-hidden flex flex-col justify-between shadow-2xl">
+            
+            <!-- Live Animated Canvas Background -->
+            <canvas id="liveStreamCanvas" class="absolute inset-0 w-full h-full block"></canvas>
+            <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/95 pointer-events-none"></div>
+
+            <!-- Floating Gift Showcase Banner -->
+            <div id="liveGiftBanner" class="hidden absolute top-24 left-4 z-30 bg-gradient-to-r from-joharRed via-amber-500 to-joharBlue p-0.5 rounded-2xl shadow-2xl transition-all">
+                <div class="bg-black/90 px-4 py-2 rounded-2xl flex items-center gap-3">
+                    <span id="liveGiftEmoji" class="text-2xl">🥁</span>
+                    <div>
+                        <p class="text-xs font-black text-white">You sent <span id="liveGiftName" class="text-amber-400">Mandar Drum</span>!</p>
+                        <p class="text-[10px] text-gray-300">Supporting Jharkhand Creators 🔥</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Live Bar -->
+            <div class="relative z-20 flex items-center justify-between p-4">
+                <div class="flex items-center gap-2.5 bg-black/50 backdrop-blur-md p-1.5 pr-3 rounded-full border border-white/15">
+                    <svg class="w-8 h-8 rounded-full"><use href="#johar-logo-symbol"></use></svg>
+                    <div>
+                        <p class="text-xs font-bold text-white leading-none flex items-center gap-1">@the_godda_official <i class="fa-solid fa-circle-check text-blue-400 text-[10px]"></i></p>
+                        <p class="text-[10px] text-amber-400 font-semibold mt-0.5">🔥 <span id="liveCoinsCounter">14,850</span> Johar Coins</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="bg-joharRed text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span> LIVE
+                    </span>
+                    <span class="bg-black/60 backdrop-blur-md text-white text-xs font-bold px-2.5 py-1 rounded-full border border-white/10">
+                        <i class="fa-solid fa-eye text-joharRed mr-1"></i><span id="liveViewerCount">1,428</span>
+                    </span>
+                    <button onclick="closeLiveModal()" class="w-8 h-8 rounded-full bg-black/60 hover:bg-joharRed text-white flex items-center justify-center transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Center Broadcast Stage Overlay -->
+            <div class="relative z-10 text-center px-6 pointer-events-none my-auto">
+                <span class="bg-joharBlue/80 border border-blue-400/30 text-blue-200 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-widest">Jharkhand Ground Report</span>
+                <h3 class="font-display font-black text-2xl text-white mt-2 drop-shadow-lg">GODDA & RANCHI EVENING BULLETIN 🎙️</h3>
+                <p class="text-xs text-gray-200 mt-1">Ask your questions in the live chat below! Tap gifts to support.</p>
+            </div>
+
+            <!-- Bottom Live Chat & Virtual Gifts Controls -->
+            <div class="relative z-20 p-4 space-y-3">
+                <!-- Live Scrolling Chat Box -->
+                <div id="liveChatContainer" class="h-44 overflow-y-auto no-scrollbar space-y-2 pr-2 mask-gradient">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Virtual Gifts Bar -->
+                <div class="flex items-center justify-between gap-2 bg-black/60 backdrop-blur-md p-2 rounded-2xl border border-white/10">
+                    <button onclick="sendLiveGift('🥁', 'Mandar Drum', 50)" class="flex-1 py-1.5 rounded-xl hover:bg-white/10 flex flex-col items-center transition">
+                        <span class="text-lg">🥁</span>
+                        <span class="text-[9px] font-bold text-gray-200">Mandar (50)</span>
+                    </button>
+                    <button onclick="sendLiveGift('🍛', 'Garma Dhuska', 100)" class="flex-1 py-1.5 rounded-xl hover:bg-white/10 flex flex-col items-center transition">
+                        <span class="text-lg">🍛</span>
+                        <span class="text-[9px] font-bold text-gray-200">Dhuska (100)</span>
+                    </button>
+                    <button onclick="sendLiveGift('🏹', 'Birsa Pride', 250)" class="flex-1 py-1.5 rounded-xl hover:bg-white/10 flex flex-col items-center transition">
+                        <span class="text-lg">🏹</span>
+                        <span class="text-[9px] font-bold text-gray-200">Pride (250)</span>
+                    </button>
+                    <button onclick="sendLiveGift('👑', 'Johar Crown', 1000)" class="flex-1 py-1.5 rounded-xl hover:bg-white/10 flex flex-col items-center transition">
+                        <span class="text-lg">👑</span>
+                        <span class="text-[9px] font-bold text-amber-400">Crown (1K)</span>
+                    </button>
+                </div>
+
+                <!-- Live Chat Input & Heart Burst -->
+                <div class="flex items-center gap-2">
+                    <form onsubmit="submitLiveChatMessage(event)" class="flex-1 flex items-center gap-2">
+                        <input type="text" id="liveChatInput" required placeholder="Say Johar in LIVE chat..." 
+                            class="flex-1 bg-black/70 border border-white/20 focus:border-joharRed rounded-full px-4 py-2 text-xs text-white placeholder-gray-400 focus:outline-none">
+                        <button type="submit" class="w-9 h-9 rounded-full bg-joharBlue hover:bg-blue-700 text-white flex items-center justify-center shrink-0 transition">
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
+                        </button>
+                    </form>
+                    <button onclick="spawnLiveHeart(event)" class="w-9 h-9 rounded-full bg-joharRed hover:bg-red-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-red-600/40 transform active:scale-125 transition">
+                        <i class="fa-solid fa-heart"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION POPUP -->
+    <div id="toastNotification" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
+        <div class="bg-joharCard/95 backdrop-blur-md border border-joharRed/50 text-white px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-bold">
+            <svg class="w-5 h-5 rounded-md shrink-0"><use href="#johar-logo-symbol"></use></svg>
+            <span id="toastMessageText">Link copied to clipboard!</span>
+        </div>
+    </div>
+
+    <!-- APPLICATION JAVASCRIPT -->
+    <script>
+        /**************************************************************
+         * 1. SAMPLE DATA: REGIONAL & CULTURALLY RELEVANT SHORT VIDEOS
+         **************************************************************/
+        const CATEGORIES = ['#All', '#Jharkhand', '#News', '#Culture', '#Music', '#Nature', '#Comedy'];
+
+        let videosData = [
+            {
+                id: 'vid-1',
+                creator: '@the_godda_official',
+                verified: true,
+                avatarBg: 'from-red-600 to-blue-900',
+                location: 'Godda, Jharkhand',
+                category: '#News',
+                tab: 'jharkhand',
+                headline: 'GODDA RAIL EXPRESS UPDATE 🚆',
+                subHeadline: 'Nayi Superfast Train Se Ranchi Aur Delhi Ka Safar Hua Aasan!',
+                caption: 'Godda station se nayi train ka shubharambh! Dekhiye ground report aur public reaction. 🙏 #Johar #Jharkhand #News #Godda #Development',
+                musicTitle: 'JOHAR Breaking News Theme • Original Audio',
+                beatStyle: 'news',
+                visualTheme: 'news',
+                likes: 18420,
+                liked: false,
+                saved: false,
+                following: false,
+                shares: 1490,
+                isUserUploaded: false,
+                videoBlobUrl: null,
+                comments: [
+                    { user: '@ranchi_boy_rahul', text: 'Johar! Bahut shandar khabar hai Godda ke liye 🔥', time: '2m ago' },
+                    { user: '@priya_murmu', text: 'Proud of our Jharkhand progress ❤️', time: '14m ago' },
+                    { user: '@deoghar_vlogs', text: 'Keep posting fast local updates bhai!', time: '1h ago' }
+                ]
+            },
+            {
+                id: 'vid-2',
+                creator: '@santhali_beats',
+                verified: true,
+                avatarBg: 'from-blue-700 to-indigo-950',
+                location: 'Dumka • Santhal Pargana',
+                category: '#Culture',
+                tab: 'foryou',
+                headline: 'SOHRAI & MANDAR BEATS 🥁✨',
+                subHeadline: 'Paramparik Nagpuri & Santhali Folk Fusion Live',
+                caption: 'Mandar ki thaap par jhoom utha pura gaon! Apni sanskriti ko kabhi mat bhulna. Johar! 💃🕺 #Culture #Jharkhand #Music #Santhali #Johar',
+                musicTitle: 'Mandar Bass Drop (Folk Remix) - @santhali_beats',
+                beatStyle: 'mandar',
+                visualTheme: 'folk',
+                likes: 42900,
+                liked: true,
+                saved: true,
+                following: true,
+                shares: 5320,
+                isUserUploaded: true,
+                videoBlobUrl: null,
+                comments: [
+                    { user: '@hemant_fans', text: 'Johar! Yeh beat sunke dil khush ho gaya 🥁🔥', time: '5m ago' },
+                    { user: '@bokaro_dancer', text: 'Full energy!! Next video kab aa raha hai?', time: '25m ago' }
+                ]
+            },
+            {
+                id: 'vid-3',
+                creator: '@ranchi_diaries',
+                verified: false,
+                avatarBg: 'from-emerald-600 to-teal-900',
+                location: 'Hundru Falls, Ranchi',
+                category: '#Nature',
+                tab: 'jharkhand',
+                headline: 'HUNDRU WATERFALLS MONSOON 🌊🌿',
+                subHeadline: 'Jharkhand Ki Prakritik Sundarta Ka Koi Jawab Nahi',
+                caption: 'Weekend trip to Hundru & Dassam Falls! Tag your travel gang 🏞️✨ #Jharkhand #Nature #Ranchi #Waterfall #Johar',
+                musicTitle: 'Saranda Morning Bansuri Flute • Chill Vibes',
+                beatStyle: 'flute',
+                visualTheme: 'nature',
+                likes: 29150,
+                liked: false,
+                saved: false,
+                following: true,
+                shares: 3110,
+                isUserUploaded: true,
+                videoBlobUrl: null,
+                comments: [
+                    { user: '@jamshedpur_foodie', text: 'Ranchi ka mausam hamesha best rehta hai 😍', time: '19m ago' },
+                    { user: '@neha_tirkey', text: 'So peaceful and green!', time: '2h ago' }
+                ]
+            },
+            {
+                id: 'vid-4',
+                creator: '@desi_comedy_adda',
+                verified: true,
+                avatarBg: 'from-amber-500 to-red-700',
+                location: 'Dhanbad • Coal Capital',
+                category: '#Comedy',
+                tab: 'foryou',
+                headline: 'DHUSKA AUR GHUGNI LOVE 😍🍽️',
+                subHeadline: 'JabSubah Nashte Me Garma-Garam Dhuska Mil Jaye!',
+                caption: 'Pizza Burger ek taraf aur apna garma-garam Dhuska Barra ek taraf! Kaun kaun agree karta hai? 😂🙌 #Comedy #Jharkhand #Foodie #Dhuska #Johar',
+                musicTitle: 'Desi Hip-Hop Groove • @desi_comedy_adda',
+                beatStyle: 'desa',
+                visualTheme: 'folk',
+                likes: 64200,
+                liked: false,
+                saved: true,
+                following: false,
+                shares: 8910,
+                isUserUploaded: false,
+                videoBlobUrl: null,
+                comments: [
+                    { user: '@hazaribagh_king', text: '100% sach baat! Dhuska with aloo chana sabzi is emotion ❤️', time: '1m ago' },
+                    { user: '@ankit_ku', text: 'Bhookh lag gayi bhai subah subah 😂', time: '40m ago' }
+                ]
+            },
+            {
+                id: 'vid-5',
+                creator: '@johar_music_studio',
+                verified: true,
+                avatarBg: 'from-purple-600 to-blue-900',
+                location: 'Jamshedpur • Steel City',
+                category: '#Music',
+                tab: 'foryou',
+                headline: 'JOHAR ANTHEM 2026 🎤🔥',
+                subHeadline: 'Red & Blue Pride • Desh Ka Naya Short Video Revolution',
+                caption: 'Presenting the official JOHAR cyber visualizer! Double tap screen for Red Heart power ❤️💙 #Music #Johar #Trending #India',
+                musicTitle: 'Official JOHAR Electro Folk Anthem • 128 BPM',
+                beatStyle: 'desa',
+                visualTheme: 'news',
+                likes: 91800,
+                liked: true,
+                saved: false,
+                following: true,
+                shares: 12400,
+                isUserUploaded: true,
+                videoBlobUrl: null,
+                comments: [
+                    { user: '@the_godda_official', text: 'Superb logo and vibrant energy! 🔥🙏', time: 'Just now' }
+                ]
+            }
+        ];
+
+        let notificationsData = [
+            { id: 1, user: '@the_godda_official', action: 'went LIVE: "Godda Evening News Bulletin"', time: '3m ago', unread: true, icon: 'fa-tower-broadcast text-joharRed' },
+            { id: 2, user: '@santhali_beats', action: 'liked your comment: "Johar! Yeh beat sunke dil khush ho gaya"', time: '18m ago', unread: true, icon: 'fa-heart text-joharRed' },
+            { id: 3, user: '@ranchi_diaries', action: 'started following you on JOHAR', time: '1h ago', unread: true, icon: 'fa-user-plus text-blue-400' },
+            { id: 4, user: 'JOHAR Official', action: 'Welcome to JOHAR App! Create your first short video with #Johar', time: '3h ago', unread: true, icon: 'fa-certificate text-amber-400' }
+        ];
+
+        // State Variables
+        let currentView = 'feed';
+        let currentFeedTab = 'foryou';
+        let currentCategory = '#All';
+        let searchQuery = '';
+        let activeVideoIndex = 0;
+        let activeCommentVideoId = null;
+        let selectedStudioTheme = 'news';
+        let uploadedTempBlobUrl = null;
+        let currentProfileTab = 'uploaded';
+
+        // Audio & Canvas Animation Engine State
+        let audioEnabled = false;
+        let toneLoop = null;
+        let synthEngine = null;
+        let bassEngine = null;
+        let activeCanvasAnimations = {};
+
+        // Filter, Live Stream & Direct Message State
+        const VIDEO_FILTERS = [
+            { name: 'Normal', css: 'none' },
+            { name: 'Desh Glow', css: 'saturate(1.6) contrast(1.15) brightness(1.05)' },
+            { name: 'Cyber Johar', css: 'hue-rotate(25deg) contrast(1.25) saturate(1.4)' },
+            { name: 'Vintage', css: 'sepia(0.55) contrast(1.1) brightness(0.95)' }
+        ];
+        let currentFilterIndex = 0;
+
+        let liveStreamAnimId = null;
+        let liveChatInterval = null;
+        let liveCoins = 14850;
+
+        let currentChatPartner = '@the_godda_official';
+        let directMessagesData = {
+            '@the_godda_official': [
+                { sender: 'them', text: 'Johar! 🙏 Welcome to Godda Official News channel. Koi local khabar ya video hai toh bhejiye!', time: '10:15 AM' },
+                { sender: 'me', text: 'Johar bhai! Aapka rail express report bahut badiya tha.', time: '10:17 AM' }
+            ],
+            '@santhali_beats': [
+                { sender: 'them', text: 'Johar! 🥁 Naya Mandar DJ remix kal subah upload hoga! Stay tuned 🔥', time: 'Yesterday' }
+            ]
+        };
+
+        /**************************************************************
+         * 2. INITIALIZATION
+         **************************************************************/
+        window.onload = function () {
+            renderCategoryBars();
+            renderVideoFeed();
+            renderDiscoverPage();
+            renderNotifications();
+            renderProfilePage();
+            setupKeyboardShortcuts();
+        };
+
+        /**************************************************************
+         * 3. CATEGORY BARS & FILTERING
+         **************************************************************/
+        function renderCategoryBars() {
+            const mobileBar = document.getElementById('mobileCategoryBar');
+            const desktopPills = document.getElementById('desktopCategoryPills');
+
+            mobileBar.innerHTML = CATEGORIES.map(cat => {
+                const isActive = cat === currentCategory;
+                return `<button onclick="selectCategory('${cat}')" class="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition ${
+                    isActive 
+                    ? 'bg-joharRed text-white shadow-md shadow-red-600/40' 
+                    : 'bg-black/60 backdrop-blur-md text-gray-300 border border-white/15 hover:bg-white/10'
+                }">${cat}</button>`;
+            }).join('');
+
+            desktopPills.innerHTML = CATEGORIES.map(cat => {
+                const isActive = cat === currentCategory;
+                return `<button onclick="selectCategory('${cat}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    isActive 
+                    ? 'bg-joharRed text-white shadow-md shadow-red-600/30' 
+                    : 'bg-joharDark text-gray-300 border border-joharBorder hover:border-joharRed/50'
+                }">${cat}</button>`;
+            }).join('');
+        }
+
+        function selectCategory(category) {
+            currentCategory = category;
+            searchQuery = '';
+            if (currentView !== 'feed') switchView('feed');
+            renderCategoryBars();
+            renderVideoFeed();
+            showToast(`Filtered by ${category}`);
+        }
+
+        function setFeedTab(tab) {
+            currentFeedTab = tab;
+            ['foryou', 'following', 'jharkhand'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const ind = document.getElementById(`tab-ind-${t}`);
+                if (t === tab) {
+                    btn.className = 'text-sm font-extrabold text-white relative py-0.5 transition flex items-center gap-1';
+                    ind.classList.remove('hidden');
+                } else {
+                    btn.className = 'text-sm font-semibold text-gray-400 hover:text-white relative py-0.5 transition flex items-center gap-1';
+                    ind.classList.add('hidden');
+                }
+            });
+            renderVideoFeed();
+        }
+
+        function filterByCreator(creatorHandle) {
+            searchQuery = creatorHandle;
+            currentCategory = '#All';
+            switchView('feed');
+            renderCategoryBars();
+            renderVideoFeed();
+            showToast(`Showing videos from ${creatorHandle}`);
+        }
+
+        function resetFeedFilter() {
+            currentCategory = '#All';
+            currentFeedTab = 'foryou';
+            searchQuery = '';
+            document.getElementById('desktopSearchInput').value = '';
+            document.getElementById('discoverSearchInput').value = '';
+            setFeedTab('foryou');
+            renderCategoryBars();
+            renderVideoFeed();
+            renderDiscoverPage();
+        }
+
+        function handleSearch(val) {
+            searchQuery = val.trim().toLowerCase();
+            if (currentView === 'feed') {
+                renderVideoFeed();
+            } else {
+                renderDiscoverPage();
+            }
+        }
+
+        function getFilteredVideos() {
+            return videosData.filter(v => {
+                if (currentFeedTab === 'following' && !v.following) return false;
+                if (currentFeedTab === 'jharkhand' && v.tab !== 'jharkhand' && !v.caption.toLowerCase().includes('#jharkhand')) return false;
+                if (currentCategory !== '#All' && v.category !== currentCategory) return false;
+                if (searchQuery) {
+                    const matchCreator = v.creator.toLowerCase().includes(searchQuery);
+                    const matchCaption = v.caption.toLowerCase().includes(searchQuery);
+                    const matchHeadline = v.headline.toLowerCase().includes(searchQuery);
+                    return matchCreator || matchCaption || matchHeadline;
+                }
+                return true;
+            });
+        }
+
+        /**************************************************************
+         * 4. RENDER FULL-SCREEN VERTICAL VIDEO FEED & CANVAS VISUALIZERS
+         **************************************************************/
+        function renderVideoFeed() {
+            // Stop previous canvas loops
+            Object.values(activeCanvasAnimations).forEach(id => cancelAnimationFrame(id));
+            activeCanvasAnimations = {};
+
+            const container = document.getElementById('videoFeedContainer');
+            const filtered = getFilteredVideos();
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="h-full w-full flex flex-col items-center justify-center p-8 text-center">
+                        <svg class="w-16 h-16 rounded-2xl mb-4 opacity-75"><use href="#johar-logo-symbol"></use></svg>
+                        <h3 class="font-display font-bold text-lg text-white">No Videos Found</h3>
+                        <p class="text-xs text-gray-400 mt-1 mb-4">Try clearing your search or category filter to explore all JOHAR videos.</p>
+                        <button onclick="resetFeedFilter()" class="bg-joharRed text-white text-xs font-bold px-5 py-2.5 rounded-xl">Reset Filters</button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtered.map((video, idx) => `
+                <div class="video-slide select-none overflow-hidden bg-black" data-index="${idx}" data-id="${video.id}" ondblclick="handleDoubleTapLike(event, '${video.id}')">
+                    
+                    <!-- Video or Interactive Dynamic Canvas Visualizer -->
+                    ${video.videoBlobUrl ? `
+                        <video src="${video.videoBlobUrl}" class="w-full h-full object-cover" loop muted playsinline autoplay></video>
+                    ` : `
+                        <canvas id="canvas-${video.id}" class="w-full h-full block"></canvas>
+                    `}
+
+                    <!-- Center Overlay Text Card for Regional News / Culture Vibe -->
+                    <div class="absolute inset-x-4 top-28 pointer-events-none flex flex-col items-center text-center z-10">
+                        <div class="inline-flex items-center gap-2 bg-black/65 backdrop-blur-md border border-white/15 px-3 py-1 rounded-full mb-2">
+                            <svg class="w-4 h-4 rounded"><use href="#johar-logo-symbol"></use></svg>
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-red-400">${video.location}</span>
+                        </div>
+                        <h2 class="font-display font-black text-xl sm:text-2xl text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)] px-3 py-1.5 rounded-xl bg-gradient-to-r from-joharRed/85 via-joharBlue/85 to-joharRed/85 border border-white/20">
+                            ${video.headline}
+                        </h2>
+                        <p class="mt-2 text-xs sm:text-sm font-bold text-gray-100 bg-black/60 backdrop-blur-xs px-3 py-1 rounded-lg max-w-xs drop-shadow">
+                            ${video.subHeadline}
+                        </p>
+                    </div>
+
+                    <!-- Bottom Gradient Overlay -->
+                    <div class="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90 pointer-events-none"></div>
+
+                    <!-- RIGHT-SIDE INTERACTIVE ACTION BAR -->
+                    <div class="absolute right-3 bottom-20 md:bottom-8 z-20 flex flex-col items-center gap-5">
+                        
+                        <!-- Creator Avatar + Follow Badge -->
+                        <div class="relative mb-1">
+                            <div onclick="filterByCreator('${video.creator}')" class="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-joharRed to-white cursor-pointer shadow-lg">
+                                <div class="w-full h-full rounded-full bg-gradient-to-tr ${video.avatarBg} flex items-center justify-center font-display font-black text-base text-white">
+                                    ${video.creator.charAt(1).toUpperCase()}
+                                </div>
+                            </div>
+                            <button onclick="toggleFollow(event, '${video.id}')" id="follow-btn-${video.id}" 
+                                class=" -bottom-2 left-1/2 -translate-x-1/2 absolute w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white shadow-md transition ${video.following ? 'bg-joharBlue border border-white' : 'bg-joharRed'}">
+                                <i class="fa-solid ${video.following ? 'fa-check' : 'fa-plus'}"></i>
+                            </button>
+                        </div>
+
+                        <!-- Like Button -->
+                        <button onclick="toggleLike('${video.id}')" class="flex flex-col items-center group">
+                            <div class="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center transition transform active:scale-125 group-hover:bg-white/10">
+                                <i id="like-icon-${video.id}" class="fa-solid fa-heart text-2xl transition ${video.liked ? 'text-joharRed scale-110' : 'text-white'}"></i>
+                            </div>
+                            <span id="like-count-${video.id}" class="text-xs font-bold mt-1 text-white drop-shadow">${formatCount(video.likes)}</span>
+                        </button>
+
+                        <!-- Comment Button -->
+                        <button onclick="openCommentsDrawer('${video.id}')" class="flex flex-col items-center group">
+                            <div class="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center transition group-hover:bg-white/10">
+                                <i class="fa-solid fa-comment-dots text-2xl text-white"></i>
+                            </div>
+                            <span id="comment-count-${video.id}" class="text-xs font-bold mt-1 text-white drop-shadow">${video.comments.length}</span>
+                        </button>
+
+                        <!-- Bookmark / Save Button -->
+                        <button onclick="toggleSave('${video.id}')" class="flex flex-col items-center group">
+                            <div class="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center transition group-hover:bg-white/10">
+                                <i id="save-icon-${video.id}" class="fa-solid fa-bookmark text-xl transition ${video.saved ? 'text-amber-400' : 'text-white'}"></i>
+                            </div>
+                            <span class="text-[11px] font-semibold mt-1 text-white drop-shadow">${video.saved ? 'Saved' : 'Save'}</span>
+                        </button>
+
+                        <!-- Share Button -->
+                        <button onclick="shareVideo('${video.id}')" class="flex flex-col items-center group">
+                            <div class="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center transition group-hover:bg-white/10">
+                                <i class="fa-solid fa-share text-xl text-white"></i>
+                            </div>
+                            <span id="share-count-${video.id}" class="text-[11px] font-semibold mt-1 text-white drop-shadow">${formatCount(video.shares)}</span>
+                        </button>
+
+                        <!-- Spinning Vinyl Music Disc -->
+                        <div class="relative mt-1 cursor-pointer" onclick="toggleAudioEngine()">
+                            <i class="fa-solid fa-music text-joharRed text-xs absolute -top-2 -left-2 music-note-anim"></i>
+                            <div class="w-11 h-11 rounded-full bg-zinc-900 border-4 border-zinc-700 flex items-center justify-center animate-spin-slow shadow-lg">
+                                <svg class="w-5 h-5 rounded-full"><use href="#johar-logo-symbol"></use></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOTTOM-LEFT CREATOR INFO & MUSIC TICKER -->
+                    <div class="absolute left-4 right-20 bottom-20 md:bottom-7 z-20 flex flex-col gap-2 pointer-events-auto">
+                        <div class="flex items-center gap-2">
+                            <h3 onclick="filterByCreator('${video.creator}')" class="font-display font-bold text-base text-white hover:underline cursor-pointer flex items-center gap-1.5 drop-shadow">
+                                ${video.creator}
+                                ${video.verified ? '<i class="fa-solid fa-circle-check text-blue-400 text-xs"></i>' : ''}
+                            </h3>
+                            <span class="text-[10px] bg-white/15 backdrop-blur-xs px-2 py-0.5 rounded-md font-bold text-gray-200">${video.category}</span>
+                        </div>
+
+                        <p class="text-xs text-gray-200 leading-relaxed line-clamp-2 drop-shadow">
+                            ${highlightHashtags(video.caption)}
+                        </p>
+
+                        <!-- Scrolling Music Ticker -->
+                        <div class="flex items-center gap-2 mt-0.5 overflow-hidden w-60 bg-black/40 backdrop-blur-xs px-2.5 py-1 rounded-full border border-white/10">
+                            <i class="fa-solid fa-compact-disc text-joharRed text-xs animate-spin"></i>
+                            <div class="overflow-hidden whitespace-nowrap w-full">
+                                <span class="text-[11px] font-medium text-gray-200 animate-marquee inline-block">
+                                    ${video.musicTitle} &nbsp;&nbsp;•&nbsp;&nbsp; ${video.musicTitle}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            `).join('');
+
+            // Initialize Canvas Visualizers for each slide
+            filtered.forEach(video => {
+                if (!video.videoBlobUrl) {
+                    initVideoCanvas(video);
+                }
+            });
+
+            // Re-apply active video filter if selected
+            applyVideoFilterToSlides();
+
+            // Setup Intersection Observer to detect active slide & switch audio beat
+            setupScrollObserver(filtered);
+        }
+
+        function highlightHashtags(text) {
+            return text.replace(/(#[a-zA-Z0-9_]+)/g, '<span onclick="selectCategory(\'$1\')" class="font-bold text-white hover:text-joharRed cursor-pointer">$1</span>');
+        }
+
+        /**************************************************************
+         * 5. HTML5 CANVAS ANIMATED VISUALIZERS FOR EACH VIDEO
+         **************************************************************/
+        function initVideoCanvas(video) {
+            const canvas = document.getElementById(`canvas-${video.id}`);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = canvas.parentElement.clientWidth || 400;
+                canvas.height = canvas.parentElement.clientHeight || 720;
+            }
+            resize();
+
+            let frame = 0;
+            const particles = Array.from({ length: 38 }, () => ({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                r: Math.random() * 4 + 1.5,
+                vx: (Math.random() - 0.5) * 1.4,
+                vy: -Math.random() * 2 - 0.6,
+                alpha: Math.random() * 0.7 + 0.3
+            }));
+
+            function draw() {
+                frame++;
+                const w = canvas.width;
+                const h = canvas.height;
+
+                // Theme-specific animated background
+                const grad = ctx.createLinearGradient(0, 0, w, h);
+                if (video.visualTheme === 'news') {
+                    grad.addColorStop(0, '#450000');
+                    grad.addColorStop(0.5, '#00124d');
+                    grad.addColorStop(1, '#08080c');
+                } else if (video.visualTheme === 'folk') {
+                    grad.addColorStop(0, '#001E80');
+                    grad.addColorStop(0.5, '#600020');
+                    grad.addColorStop(1, '#090910');
+                } else {
+                    grad.addColorStop(0, '#042f2e');
+                    grad.addColorStop(0.5, '#001E80');
+                    grad.addColorStop(1, '#051014');
+                }
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+
+                // Animated Equalizer / Pulse Waves in Center
+                const centerX = w / 2;
+                const centerY = h * 0.54;
+                const baseRadius = 68 + Math.sin(frame * 0.08) * 12;
+
+                // Outer glowing rings in Red & Royal Blue
+                for (let i = 3; i >= 1; i--) {
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, baseRadius + i * 24 + Math.sin(frame * 0.06 + i) * 8, 0, Math.PI * 2);
+                    ctx.strokeStyle = i % 2 === 0 ? 'rgba(255, 0, 0, 0.28)' : 'rgba(0, 80, 255, 0.28)';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+
+                // Audio Visualizer Bars around Circle
+                const bars = 36;
+                for (let i = 0; i < bars; i++) {
+                    const angle = (i / bars) * Math.PI * 2 + frame * 0.01;
+                    const barLen = 18 + Math.abs(Math.sin(frame * 0.1 + i * 0.6)) * 42;
+                    const x1 = centerX + Math.cos(angle) * baseRadius;
+                    const y1 = centerY + Math.sin(angle) * baseRadius;
+                    const x2 = centerX + Math.cos(angle) * (baseRadius + barLen);
+                    const y2 = centerY + Math.sin(angle) * (baseRadius + barLen);
+
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.strokeStyle = i % 2 === 0 ? '#FF0000' : '#3B82F6';
+                    ctx.lineWidth = 4;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                }
+
+                // Center Emblem Circle (Red Badge with 3 Royal Blue Waves)
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, baseRadius - 6, 0, Math.PI * 2);
+                ctx.fillStyle = '#FF0000';
+                ctx.fill();
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.stroke();
+
+                // Draw 3 stylized diagonal Royal Blue stripes inside the circle
+                ctx.translate(centerX, centerY);
+                ctx.rotate(-0.6 + Math.sin(frame * 0.03) * 0.08);
+                ctx.fillStyle = '#001E80';
+                for (let s = -1; s <= 1; s++) {
+                    const offset = s * 22;
+                    ctx.beginPath();
+                    ctx.roundRect(offset - 7, -38 + Math.abs(s) * 8, 14, 76 - Math.abs(s) * 16, 8);
+                    ctx.fill();
+                }
+                ctx.restore();
+
+                // Floating glowing particles
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.y < 0) p.y = h;
+                    if (p.x < 0) p.x = w;
+                    if (p.x > w) p.x = 0;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+                    ctx.fill();
+                });
+
+                activeCanvasAnimations[video.id] = requestAnimationFrame(draw);
+            }
+
+            draw();
+        }
+
+        /**************************************************************
+         * 6. SCROLL SNAP OBSERVER & WEB AUDIO (TONE.JS) BEAT ENGINE
+         **************************************************************/
+        function setupScrollObserver(filteredVideos) {
+            const slides = document.querySelectorAll('.video-slide');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const idx = parseInt(entry.target.getAttribute('data-index'), 10);
+                        activeVideoIndex = idx;
+                        const activeVid = filteredVideos[idx];
+                        if (activeVid && audioEnabled) {
+                            playVideoBeat(activeVid.beatStyle);
+                        }
+                    }
+                });
+            }, { threshold: 0.65 });
+
+            slides.forEach(s => observer.observe(s));
+        }
+
+        function scrollFeed(direction) {
+            const container = document.getElementById('videoFeedContainer');
+            const slides = container.querySelectorAll('.video-slide');
+            const nextIdx = Math.max(0, Math.min(slides.length - 1, activeVideoIndex + direction));
+            if (slides[nextIdx]) {
+                slides[nextIdx].scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function setupKeyboardShortcuts() {
+            window.addEventListener('keydown', (e) => {
+                if (currentView !== 'feed') return;
+                if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    scrollFeed(1);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    scrollFeed(-1);
+                }
+            });
+        }
+
+        async function toggleAudioEngine() {
+            await Tone.start();
+            audioEnabled = !audioEnabled;
+
+            const icon = document.getElementById('soundToggleIcon');
+            const text = document.getElementById('soundToggleText');
+
+            if (audioEnabled) {
+                icon.className = 'fa-solid fa-volume-high text-green-400';
+                text.textContent = 'Sound ON';
+                const filtered = getFilteredVideos();
+                if (filtered[activeVideoIndex]) {
+                    playVideoBeat(filtered[activeVideoIndex].beatStyle);
+                }
+                showToast('Audio Beats Enabled 🎵');
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-joharRed';
+                text.textContent = 'Tap Sound';
+                stopAudioBeat();
+                showToast('Audio Muted 🔇');
+            }
+        }
+
+        function stopAudioBeat() {
+            if (toneLoop) {
+                toneLoop.stop();
+                toneLoop.dispose();
+                toneLoop = null;
+            }
+            Tone.Transport.stop();
+        }
+
+        function playVideoBeat(style) {
+            stopAudioBeat();
+            if (!audioEnabled) return;
+
+            if (!synthEngine) {
+                synthEngine = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'triangle' },
+                    envelope: { attack: 0.02, decay: 0.15, sustain: 0.1, release: 0.4 }
+                }).toDestination();
+                synthEngine.volume.value = -10;
+
+                bassEngine = new Tone.MembraneSynth().toDestination();
+                bassEngine.volume.value = -8;
+            }
+
+            let notes = ['C4', 'E4', 'G4', 'A4'];
+            let interval = '8n';
+
+            if (style === 'news') {
+                notes = ['E4', 'E4', 'B4', 'E5', 'D5', 'B4'];
+                Tone.Transport.bpm.value = 135;
+            } else if (style === 'mandar') {
+                notes = ['D3', 'A3', 'D4', 'F4', 'A4', 'F4'];
+                Tone.Transport.bpm.value = 122;
+            } else if (style === 'flute') {
+                notes = ['G4', 'A4', 'C5', 'D5', 'E5', 'D5'];
+                Tone.Transport.bpm.value = 98;
+            } else {
+                notes = ['C3', 'G3', 'C4', 'Eb4', 'G4'];
+                Tone.Transport.bpm.value = 128;
+            }
+
+            let step = 0;
+            toneLoop = new Tone.Loop((time) => {
+                const note = notes[step % notes.length];
+                synthEngine.triggerAttackRelease(note, interval, time);
+                if (step % 2 === 0) {
+                    bassEngine.triggerAttackRelease('C2', '16n', time);
+                }
+                step++;
+            }, '8n').start(0);
+
+            Tone.Transport.start();
+        }
+
+        /**************************************************************
+         * 7. INTERACTIONS: LIKE, DOUBLE TAP HEART, FOLLOW, SAVE, SHARE
+         **************************************************************/
+        function toggleLike(videoId) {
+            const vid = videosData.find(v => v.id === videoId);
+            if (!vid) return;
+
+            vid.liked = !vid.liked;
+            vid.likes += vid.liked ? 1 : -1;
+
+            const icon = document.getElementById(`like-icon-${videoId}`);
+            const count = document.getElementById(`like-count-${videoId}`);
+            if (icon && count) {
+                icon.className = `fa-solid fa-heart text-2xl transition ${vid.liked ? 'text-joharRed scale-110' : 'text-white'}`;
+                count.textContent = formatCount(vid.likes);
+            }
+            renderProfilePage();
+        }
+
+        function handleDoubleTapLike(event, videoId) {
+            const vid = videosData.find(v => v.id === videoId);
+            if (vid && !vid.liked) {
+                toggleLike(videoId);
+            }
+
+            // Spawn animated floating heart at tap coordinates
+            const slide = event.currentTarget;
+            const rect = slide.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            const heart = document.createElement('i');
+            heart.className = 'fa-solid fa-heart text-6xl floating-heart';
+            heart.style.left = `${x}px`;
+            heart.style.top = `${y}px`;
+            slide.appendChild(heart);
+
+            setTimeout(() => heart.remove(), 950);
+        }
+
+        function toggleFollow(event, videoId) {
+            event.stopPropagation();
+            const vid = videosData.find(v => v.id === videoId);
+            if (!vid) return;
+
+            vid.following = !vid.following;
+            const btn = document.getElementById(`follow-btn-${videoId}`);
+            if (btn) {
+                btn.className = `-bottom-2 left-1/2 -translate-x-1/2 absolute w-5 h-5 rounded-full flex items-center justify-center text-[10px] text-white shadow-md transition ${vid.following ? 'bg-joharBlue border border-white' : 'bg-joharRed'}`;
+                btn.innerHTML = `<i class="fa-solid ${vid.following ? 'fa-check' : 'fa-plus'}"></i>`;
+            }
+            showToast(vid.following ? `Following ${vid.creator} 🙏` : `Unfollowed ${vid.creator}`);
+        }
+
+        function toggleSave(videoId) {
+            const vid = videosData.find(v => v.id === videoId);
+            if (!vid) return;
+
+            vid.saved = !vid.saved;
+            const icon = document.getElementById(`save-icon-${videoId}`);
+            if (icon) {
+                icon.className = `fa-solid fa-bookmark text-xl transition ${vid.saved ? 'text-amber-400' : 'text-white'}`;
+                icon.parentElement.nextElementSibling.textContent = vid.saved ? 'Saved' : 'Save';
+            }
+            showToast(vid.saved ? 'Saved to Bookmarks 🔖' : 'Removed from Bookmarks');
+            renderProfilePage();
+        }
+
+        function shareVideo(videoId) {
+            const vid = videosData.find(v => v.id === videoId);
+            if (!vid) return;
+
+            vid.shares += 1;
+            const shareEl = document.getElementById(`share-count-${videoId}`);
+            if (shareEl) shareEl.textContent = formatCount(vid.shares);
+
+            // Fallback clipboard copy for iframe compatibility
+            const dummyInput = document.createElement('input');
+            dummyInput.value = `https://johar.app/watch/${videoId}`;
+            document.body.appendChild(dummyInput);
+            dummyInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummyInput);
+
+            showToast(`Video link copied! Share ${vid.creator}'s post 🚀`);
+        }
+
+        /**************************************************************
+         * 8. COMMENTS DRAWER LOGIC
+         **************************************************************/
+        function openCommentsDrawer(videoId) {
+            activeCommentVideoId = videoId;
+            const vid = videosData.find(v => v.id === videoId);
+            if (!vid) return;
+
+            document.getElementById('drawerCommentCount').textContent = vid.comments.length;
+            renderCommentsList(vid);
+
+            const modal = document.getElementById('commentsDrawerModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeCommentsDrawer() {
+            const modal = document.getElementById('commentsDrawerModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function renderCommentsList(vid) {
+            const list = document.getElementById('commentsListContainer');
+            if (vid.comments.length === 0) {
+                list.innerHTML = `<p class="text-center text-xs text-gray-500 py-10">No comments yet. Say Johar first! 🙏</p>`;
+                return;
+            }
+            list.innerHTML = vid.comments.map(c => `
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-joharRed to-joharBlue flex items-center justify-center font-bold text-xs text-white shrink-0">
+                        ${c.user.charAt(1).toUpperCase()}
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-gray-300">${c.user}</span>
+                            <span class="text-[10px] text-gray-500">${c.time}</span>
+                        </div>
+                        <p class="text-xs text-white mt-0.5 leading-relaxed">${c.text}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function submitComment(e) {
+            e.preventDefault();
+            const input = document.getElementById('newCommentInput');
+            const text = input.value.trim();
+            if (!text || !activeCommentVideoId) return;
+
+            const vid = videosData.find(v => v.id === activeCommentVideoId);
+            if (!vid) return;
+
+            vid.comments.unshift({
+                user: '@johar_creator_official',
+                text: text,
+                time: 'Just now'
+            });
+
+            input.value = '';
+            document.getElementById('drawerCommentCount').textContent = vid.comments.length;
+            const feedCounter = document.getElementById(`comment-count-${vid.id}`);
+            if (feedCounter) feedCounter.textContent = vid.comments.length;
+
+            renderCommentsList(vid);
+            showToast('Comment posted! 💬');
+        }
+
+        /**************************************************************
+         * 9. UPLOAD / CREATE SHORT VIDEO STUDIO
+         **************************************************************/
+        function openUploadModal() {
+            const modal = document.getElementById('uploadModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeUploadModal() {
+            const modal = document.getElementById('uploadModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectStudioTheme(theme) {
+            selectedStudioTheme = theme;
+            ['news', 'folk', 'nature'].forEach(t => {
+                const btn = document.getElementById(`theme-btn-${t}`);
+                if (t === theme) {
+                    btn.className = 'py-2 px-2 rounded-xl text-xs font-bold border border-joharRed bg-joharRed/20 text-white';
+                } else {
+                    btn.className = 'py-2 px-2 rounded-xl text-xs font-bold border border-joharBorder bg-joharDark text-gray-400';
+                }
+            });
+        }
+
+        function handleFileSelection(input) {
+            const file = input.files[0];
+            if (file) {
+                uploadedTempBlobUrl = URL.createObjectURL(file);
+                document.getElementById('uploadFileName').textContent = `Selected: ${file.name}`;
+                document.getElementById('uploadFileName').classList.add('text-green-400');
+            }
+        }
+
+        function handlePublishVideo(e) {
+            e.preventDefault();
+            const headline = document.getElementById('videoHeadlineInput').value.trim();
+            const caption = document.getElementById('videoCaptionInput').value.trim();
+            const beatStyle = document.getElementById('videoMusicSelect').value;
+
+            const newVid = {
+                id: 'vid-' + Date.now(),
+                creator: '@johar_creator_official',
+                verified: true,
+                avatarBg: 'from-joharRed to-joharBlue',
+                location: 'Jharkhand • India',
+                category: caption.includes('#News') ? '#News' : (caption.includes('#Music') ? '#Music' : '#Jharkhand'),
+                tab: 'jharkhand',
+                headline: headline.toUpperCase(),
+                subHeadline: 'Created with JOHAR Studio • Live Update',
+                caption: caption.includes('#Johar') ? caption : `${caption} #Johar #Jharkhand`,
+                musicTitle: 'JOHAR Original Studio Beat • @johar_creator_official',
+                beatStyle: beatStyle,
+                visualTheme: selectedStudioTheme,
+                likes: 1,
+                liked: true,
+                saved: false,
+                following: true,
+                shares: 0,
+                isUserUploaded: true,
+                videoBlobUrl: uploadedTempBlobUrl,
+                comments: []
+            };
+
+            videosData.unshift(newVid);
+            uploadedTempBlobUrl = null;
+            document.getElementById('videoHeadlineInput').value = '';
+            document.getElementById('videoCaptionInput').value = '';
+            document.getElementById('uploadFileName').textContent = 'Tap to select MP4/WebM from device (Optional)';
+
+            closeUploadModal();
+            resetFeedFilter();
+            switchView('feed');
+            renderProfilePage();
+            renderDiscoverPage();
+            showToast('Your JOHAR Short is now LIVE on the Feed! 🎉');
+        }
+
+        /**************************************************************
+         * 10. DISCOVER, INBOX & PROFILE VIEWS
+         **************************************************************/
+        function switchView(view) {
+            currentView = view;
+            const views = ['feed', 'discover', 'inbox', 'profile'];
+            views.forEach(v => {
+                document.getElementById(`view-${v}`).classList.toggle('hidden', v !== view);
+            });
+
+            // Hide feed header when not on feed
+            document.getElementById('feedTopHeader').classList.toggle('hidden', view !== 'feed');
+
+            // Update Desktop & Mobile Nav Highlight
+            views.forEach(v => {
+                const dBtn = document.getElementById(`nav-desktop-${v}`);
+                const mBtn = document.getElementById(`nav-mobile-${v}`);
+                if (dBtn) {
+                    dBtn.className = v === view
+                        ? 'w-full flex items-center gap-4 px-4 py-3 rounded-xl font-semibold text-sm transition bg-joharRed/15 text-joharRed border border-joharRed/30'
+                        : 'w-full flex items-center gap-4 px-4 py-3 rounded-xl font-semibold text-sm text-gray-300 hover:bg-white/5 transition';
+                }
+                if (mBtn) {
+                    mBtn.className = v === view
+                        ? 'flex flex-col items-center justify-center text-joharRed py-1 px-3 relative'
+                        : 'flex flex-col items-center justify-center text-gray-400 py-1 px-3 relative';
+                }
+            });
+
+            if (view === 'discover') renderDiscoverPage();
+            if (view === 'profile') renderProfilePage();
+        }
+
+        function renderDiscoverPage() {
+            const tags = [
+                { tag: '#JoharJharkhand', views: '14.2M views', desc: 'Culture & State Pride' },
+                { tag: '#GoddaUpdates', views: '4.8M views', desc: 'Local Civic & Rail News' },
+                { tag: '#SanthaliBeats', views: '9.1M views', desc: 'Mandar & Folk Music' },
+                { tag: '#RanchiDiaries', views: '6.4M views', desc: 'Waterfalls & Vlogs' }
+            ];
+
+            document.getElementById('discoverHashtagGrid').innerHTML = tags.map(t => `
+                <div onclick="selectCategory('#Jharkhand')" class="bg-joharCard hover:border-joharRed border border-joharBorder p-3.5 rounded-2xl cursor-pointer transition group">
+                    <p class="font-display font-bold text-sm text-white group-hover:text-joharRed transition">${t.tag}</p>
+                    <p class="text-[11px] text-gray-400 mt-0.5">${t.desc}</p>
+                    <span class="inline-block mt-2 text-[10px] font-bold bg-joharBlue/40 text-blue-300 px-2 py-0.5 rounded-md">${t.views}</span>
+                </div>
+            `).join('');
+
+            const filtered = getFilteredVideos();
+            document.getElementById('discoverVideoCount').textContent = filtered.length;
+
+            document.getElementById('discoverVideoGrid').innerHTML = filtered.map(v => `
+                <div onclick="openSpecificVideo('${v.id}')" class="group relative aspect-[9/14] rounded-2xl overflow-hidden bg-joharCard border border-joharBorder cursor-pointer">
+                    <div class="absolute inset-0 bg-gradient-to-br from-joharRed/40 via-joharBlue/60 to-black group-hover:scale-105 transition duration-300"></div>
+                    <div class="absolute inset-0 p-3 flex flex-col justify-between">
+                        <span class="self-start bg-black/60 backdrop-blur-xs text-[10px] font-bold px-2 py-0.5 rounded text-white">${v.category}</span>
+                        <div>
+                            <p class="font-display font-extrabold text-xs text-white line-clamp-2 drop-shadow">${v.headline}</p>
+                            <div class="flex items-center justify-between mt-2 pt-2 border-t border-white/10 text-[10px] text-gray-300">
+                                <span class="truncate max-w-[90px]">${v.creator}</span>
+                                <span class="flex items-center gap-1 text-joharRed font-bold"><i class="fa-solid fa-heart"></i> ${formatCount(v.likes)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openSpecificVideo(videoId) {
+            currentCategory = '#All';
+            searchQuery = '';
+            switchView('feed');
+            renderVideoFeed();
+            setTimeout(() => {
+                const target = document.querySelector(`.video-slide[data-id="${videoId}"]`);
+                if (target) target.scrollIntoView({ behavior: 'smooth' });
+            }, 60);
+        }
+
+        function renderNotifications() {
+            const container = document.getElementById('notificationList');
+            container.innerHTML = notificationsData.map(n => `
+                <div class="flex items-center justify-between p-4 rounded-2xl border ${n.unread ? 'bg-joharCard border-joharRed/40' : 'bg-joharCard/50 border-joharBorder'}">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-10 h-10 rounded-full bg-joharDark border border-joharBorder flex items-center justify-center">
+                            <i class="fa-solid ${n.icon} text-base"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-white"><span class="font-bold">${n.user}</span> ${n.action}</p>
+                            <p class="text-[10px] text-gray-400 mt-0.5">${n.time}</p>
+                        </div>
+                    </div>
+                    ${n.unread ? '<span class="w-2 h-2 rounded-full bg-joharRed"></span>' : ''}
+                </div>
+            `).join('');
+        }
+
+        function markNotificationsRead() {
+            notificationsData.forEach(n => n.unread = false);
+            document.getElementById('inbox-badge-desktop').classList.add('hidden');
+            document.getElementById('inbox-badge-mobile').classList.add('hidden');
+            renderNotifications();
+            showToast('All notifications marked as read');
+        }
+
+        function switchProfileTab(tab) {
+            currentProfileTab = tab;
+            ['uploaded', 'liked', 'saved'].forEach(t => {
+                const btn = document.getElementById(`prof-tab-${t}`);
+                btn.className = t === tab
+                    ? 'flex-1 py-2.5 text-xs font-bold text-white border-b-2 border-joharRed flex items-center justify-center gap-1.5'
+                    : 'flex-1 py-2.5 text-xs font-bold text-gray-400 hover:text-white border-b-2 border-transparent flex items-center justify-center gap-1.5';
+            });
+            renderProfilePage();
+        }
+
+        function renderProfilePage() {
+            let list = [];
+            if (currentProfileTab === 'uploaded') {
+                list = videosData.filter(v => v.isUserUploaded);
+            } else if (currentProfileTab === 'liked') {
+                list = videosData.filter(v => v.liked);
+            } else {
+                list = videosData.filter(v => v.saved);
+            }
+
+            const grid = document.getElementById('profileVideoGrid');
+            if (list.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-xs text-gray-500">No videos in this tab yet.</div>`;
+                return;
+            }
+
+            grid.innerHTML = list.map(v => `
+                <div onclick="openSpecificVideo('${v.id}')" class="aspect-[9/13] rounded-2xl overflow-hidden relative bg-gradient-to-b from-joharBlue/70 via-joharCard to-black border border-joharBorder p-3 flex flex-col justify-between cursor-pointer hover:border-joharRed transition">
+                    <div class="flex items-center justify-between">
+                        <svg class="w-5 h-5 rounded"><use href="#johar-logo-symbol"></use></svg>
+                        <span class="text-[10px] font-bold bg-black/50 px-2 py-0.5 rounded text-gray-200">${v.category}</span>
+                    </div>
+                    <div>
+                        <p class="font-display font-bold text-xs text-white line-clamp-2">${v.headline}</p>
+                        <p class="text-[10px] text-joharRed font-bold mt-1"><i class="fa-solid fa-heart mr-1"></i>${formatCount(v.likes)}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function copyProfileLink() {
+            showToast('Profile link @johar_creator_official copied! 🔗');
+        }
+
+        /**************************************************************
+         * 11. VIDEO FILTERS, LIVE STREAMING & DIRECT MESSAGING
+         **************************************************************/
+        function cycleVideoFilter() {
+            currentFilterIndex = (currentFilterIndex + 1) % VIDEO_FILTERS.length;
+            const currentFilter = VIDEO_FILTERS[currentFilterIndex];
+            document.getElementById('activeFilterLabel').textContent = currentFilter.name;
+            applyVideoFilterToSlides();
+            showToast(`Video Filter: ${currentFilter.name} ✨`);
+        }
+
+        function applyVideoFilterToSlides() {
+            const currentFilter = VIDEO_FILTERS[currentFilterIndex];
+            document.querySelectorAll('.video-slide canvas, .video-slide video').forEach(el => {
+                el.style.filter = currentFilter.css;
+            });
+        }
+
+        // INBOX DIRECT MESSAGES (JOHAR CHAT)
+        function switchInboxSubTab(subTab) {
+            const actBtn = document.getElementById('inbox-tab-activity');
+            const msgBtn = document.getElementById('inbox-tab-messages');
+            const notifList = document.getElementById('notificationList');
+            const dmPanel = document.getElementById('directMessagesPanel');
+
+            if (subTab === 'activity') {
+                actBtn.className = 'flex-1 py-2 rounded-lg text-xs font-bold bg-joharRed text-white transition';
+                msgBtn.className = 'flex-1 py-2 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition flex items-center justify-center gap-1.5';
+                notifList.classList.remove('hidden');
+                dmPanel.classList.add('hidden');
+            } else {
+                msgBtn.className = 'flex-1 py-2 rounded-lg text-xs font-bold bg-joharRed text-white transition flex items-center justify-center gap-1.5';
+                actBtn.className = 'flex-1 py-2 rounded-lg text-xs font-bold text-gray-400 hover:text-white transition';
+                notifList.classList.add('hidden');
+                dmPanel.classList.remove('hidden');
+                renderDirectMessages();
+            }
+        }
+
+        function selectChatPartner(handle) {
+            currentChatPartner = handle;
+            document.getElementById('activeChatUser').innerHTML = `${handle} <i class="fa-solid fa-circle-check text-blue-400 text-[10px]"></i>`;
+            renderDirectMessages();
+        }
+
+        function renderDirectMessages() {
+            const container = document.getElementById('chatMessagesContainer');
+            const msgs = directMessagesData[currentChatPartner] || [];
+            container.innerHTML = msgs.map(m => `
+                <div class="flex flex-col ${m.sender === 'me' ? 'items-end' : 'items-start'}">
+                    <div class="max-w-[78%] px-3.5 py-2 rounded-2xl text-xs ${
+                        m.sender === 'me'
+                        ? 'bg-joharRed text-white rounded-br-xs'
+                        : 'bg-joharDark border border-joharBorder text-gray-100 rounded-bl-xs'
+                    }">
+                        ${m.text}
+                    </div>
+                    <span class="text-[9px] text-gray-500 mt-1">${m.time}</span>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendDirectMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('directMessageInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            if (!directMessagesData[currentChatPartner]) {
+                directMessagesData[currentChatPartner] = [];
+            }
+            directMessagesData[currentChatPartner].push({
+                sender: 'me',
+                text: text,
+                time: 'Just now'
+            });
+            input.value = '';
+            renderDirectMessages();
+
+            // Simulated Instant Creator Reply
+            setTimeout(() => {
+                const replies = [
+                    'Johar! 🙏 Bahut dhanyawad aapke message ke liye. Support banate rahiye!',
+                    'Bilkul! Agla video isi topic par aayega 🔥 #JoharJharkhand',
+                    'Shukriya dost! Share zaroor kijiyega apne dosto ke sath ❤️💙'
+                ];
+                const randomReply = replies[Math.floor(Math.random() * replies.length)];
+                directMessagesData[currentChatPartner].push({
+                    sender: 'them',
+                    text: randomReply,
+                    time: 'Just now'
+                });
+                renderDirectMessages();
+            }, 1100);
+        }
+
+        // JOHAR LIVE STREAMING ROOM
+        const sampleLiveMessages = [
+            { user: '@ranchi_rockstar', text: 'Johar Godda! Keep up the great ground reporting 🔥' },
+            { user: '@dumka_queen', text: 'Sound and video ekdum clear hai 🙏' },
+            { user: '@deoghar_updates', text: 'Babadham Deoghar se bhi sabhi ko Johar!' },
+            { user: '@bokaro_steel_boy', text: 'JOHAR App ka red aur blue logo kamaal lag raha hai ❤️💙' },
+            { user: '@jamshedpur_vlogs', text: 'Full support to local Jharkhand creators!' }
+        ];
+
+        function openLiveModal() {
+            const modal = document.getElementById('liveStreamModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            const chatBox = document.getElementById('liveChatContainer');
+            chatBox.innerHTML = '';
+            sampleLiveMessages.slice(0, 3).forEach(m => appendLiveChatMessage(m.user, m.text));
+
+            initLiveStreamCanvas();
+
+            // Simulate incoming live chat & viewer count fluctuations
+            clearInterval(liveChatInterval);
+            let msgIdx = 3;
+            liveChatInterval = setInterval(() => {
+                const item = sampleLiveMessages[msgIdx % sampleLiveMessages.length];
+                appendLiveChatMessage(item.user, item.text);
+                msgIdx++;
+
+                const viewerEl = document.getElementById('liveViewerCount');
+                const currentViewers = parseInt(viewerEl.textContent.replace(/,/g, ''), 10) || 1420;
+                const updated = currentViewers + Math.floor(Math.random() * 15) - 5;
+                viewerEl.textContent = updated.toLocaleString();
+            }, 2800);
+        }
+
+        function closeLiveModal() {
+            const modal = document.getElementById('liveStreamModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            if (liveStreamAnimId) cancelAnimationFrame(liveStreamAnimId);
+            clearInterval(liveChatInterval);
+        }
+
+        function appendLiveChatMessage(user, text, isGift = false) {
+            const chatBox = document.getElementById('liveChatContainer');
+            if (!chatBox) return;
+            const div = document.createElement('div');
+            div.className = `text-xs px-3 py-1.5 rounded-xl backdrop-blur-xs inline-block max-w-full break-words ${
+                isGift ? 'bg-amber-500/30 border border-amber-400/50 text-amber-200 font-bold' : 'bg-black/45 text-white'
+            }`;
+            div.innerHTML = `<span class="font-bold text-red-400 mr-1.5">${user}:</span><span>${text}</span>`;
+            const wrapper = document.createElement('div');
+            wrapper.appendChild(div);
+            chatBox.appendChild(wrapper);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function submitLiveChatMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('liveChatInput');
+            const text = input.value.trim();
+            if (!text) return;
+            appendLiveChatMessage('@johar_creator_official', text);
+            input.value = '';
+        }
+
+        function sendLiveGift(emoji, name, coins) {
+            liveCoins += coins;
+            document.getElementById('liveCoinsCounter').textContent = liveCoins.toLocaleString();
+            appendLiveChatMessage('@johar_creator_official', `Sent ${emoji} ${name} (+${coins} Coins)!`, true);
+
+            const banner = document.getElementById('liveGiftBanner');
+            document.getElementById('liveGiftEmoji').textContent = emoji;
+            document.getElementById('liveGiftName').textContent = name;
+            banner.classList.remove('hidden');
+
+            setTimeout(() => {
+                banner.classList.add('hidden');
+            }, 2400);
+        }
+
+        function spawnLiveHeart(e) {
+            const modalCard = document.querySelector('#liveStreamModal > div');
+            const heart = document.createElement('i');
+            heart.className = 'fa-solid fa-heart text-4xl floating-heart';
+            heart.style.left = '88%';
+            heart.style.top = '82%';
+            modalCard.appendChild(heart);
+            setTimeout(() => heart.remove(), 950);
+        }
+
+        function initLiveStreamCanvas() {
+            const canvas = document.getElementById('liveStreamCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.clientWidth || 420;
+            canvas.height = canvas.parentElement.clientHeight || 750;
+
+            let t = 0;
+            function renderLive() {
+                t += 0.04;
+                const w = canvas.width;
+                const h = canvas.height;
+
+                const grad = ctx.createRadialGradient(w / 2, h * 0.4, 20, w / 2, h * 0.4, w * 0.9);
+                grad.addColorStop(0, '#7a0000');
+                grad.addColorStop(0.5, '#001E80');
+                grad.addColorStop(1, '#050508');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+
+                // Radar Live Rings
+                for (let r = 1; r <= 4; r++) {
+                    ctx.beginPath();
+                    const radius = ((t * 30 + r * 45) % 180) + 30;
+                    ctx.arc(w / 2, h * 0.42, radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(255, 0, 0, ${Math.max(0, 0.5 - radius / 220)})`;
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+                }
+
+                liveStreamAnimId = requestAnimationFrame(renderLive);
+            }
+            renderLive();
+        }
+
+        /**************************************************************
+         * 12. UTILITIES & TOAST NOTIFICATIONS
+         **************************************************************/
+        function formatCount(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastMessageText').textContent = message;
+            toast.classList.remove('opacity-0', '-translate-y-2');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', '-translate-y-2');
+            }, 2600);
+        }
+    </script>
+</body>
+</html>
